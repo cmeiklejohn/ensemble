@@ -2,3 +2,5 @@ _build/
 TEST-*
 data/
 log/
+src/ensemble_lexer.erl
+src/ensemble_parser.erl

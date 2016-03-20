@@ -74,4 +74,4 @@ eval_test(_Config) ->
     ct:pal("Tokenized file: ~p", [Tokens]),
     {ok, ParseTree} = ?PARSER:parse(Tokens),
     ct:pal("Parse tree: ~p", [ParseTree]),
-    ?assertMatch([2,3,4,5], ensemble:eval(ParseTree)).
+    ?assertMatch([2,3,4,5], ensemble_interpreter:eval(ParseTree)).
