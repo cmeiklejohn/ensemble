@@ -10,27 +10,31 @@ programming language inspired by APL.
 Assign a set of values to a variable.
 
 ```
-A <- 1 2 3 4
+> A <- 1 2 3 4
+{1 2 3 4}
 ```
 
 Print the value of a variable.
 
 ```
-A
+> A
+{1 2 3 4}
 ```
 
 Map the set contents using a binary function and a value and assign
 the results to another variable.
 
 ```
-B <- A+2
+> B <- A+2
+{2 3 4 5}
 ```
 
 Create a new set using the `iota` operation that will generate a series
 of values; here, the set of values is from 0 to 1000.
 
 ```
-C <- i1000
+> C <- i10
+{1 2 3 4 5 6 7 8 9 10}
 ```
 
 ## Coming Soon
@@ -42,6 +46,7 @@ C <- i1000
 * Compliment
 * REPL
 * More!
+* Print should use proper set notation.
 
 ## Copyright
 
