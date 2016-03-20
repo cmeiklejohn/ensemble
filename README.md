@@ -33,6 +33,7 @@ B <- A+2
 * Union
 * Intersection
 * Compliment
+* REPL
 * More!
 
 ## Copyright
