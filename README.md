@@ -1,8 +1,8 @@
-Ensemble: a distributed programming language for sets.
+# Ensemble
 
 <img src="https://travis-ci.org/cmeiklejohn/ensemble.svg" />
 
-# Operations
+## Operations
 
 Assign a set of values to a variable.
 
@@ -23,7 +23,7 @@ the results to another variable.
 B <- A+2
 ```
 
-# Coming Soon
+## Coming Soon
 
 * Foldr
 * Product
@@ -31,5 +31,7 @@ B <- A+2
 * Intersection
 * Compliment
 * More!
+
+## Copyright
 
 Copyright 2016 (c) Christopher S. Meiklejohn.
