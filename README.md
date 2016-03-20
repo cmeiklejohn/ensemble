@@ -42,7 +42,7 @@ Create a new set using the `iota` operation that will generate a series
 of values; here, the set of values is from 1 to 10.
 
 ```
-> C <- i10
+> D <- i10
 {1 2 3 4 5 6 7 8 9 10}
 ```
 
