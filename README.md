@@ -42,7 +42,7 @@ of values; here, the set of values is from 1 to 10.
 Semi-colons can also be used to seperate statements on the same line.
 
 ```
-A <- i 10; A
+A <- i10; A
 ```
 
 ## Coming Soon
