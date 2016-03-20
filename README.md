@@ -1,5 +1,8 @@
 # Ensemble
 
+Ensemble is a prototype of a distributed, convergent, set-based
+programming language inspired by APL.
+
 <img src="https://travis-ci.org/cmeiklejohn/ensemble.svg" />
 
 ## Operations
