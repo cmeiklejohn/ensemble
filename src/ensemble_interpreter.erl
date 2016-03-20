@@ -23,51 +23,77 @@
 
 -include("ensemble.hrl").
 
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -export([eval/1]).
 
-%% @doc Evaluate a program.
-eval([Stmt|[]]) ->
-    %% Use the node name as the actor identifier, for now.
-    put(actor, term_to_binary(node())),
+-record(state, {}).
 
-    statement(Stmt);
-eval([Stmt|Stmts]) ->
-    statement(Stmt),
-    eval(Stmts).
+%% @doc Evaluate a program.
+%% @todo Move actor to state.
+%% @todo Replace value calls.
+%% @todo Move scope to state.
+eval(Program) ->
+    %% First, apply lexical analysis.
+    {ok, Tokens, _EndLine} = ?LEXER:string(Program),
+
+    %% Next, parse into an AST.
+    {ok, ParseTree} = ?PARSER:parse(Tokens),
+
+    %% Generate an actor identifier for execution of this application.
+    Actor = term_to_binary(node()),
+    lager:info("Generated actor identifier for program: ~p",
+               [Actor]),
+    put(actor, Actor),
+
+    %% Finally, evaluate the program.
+    eval(ParseTree, #state{}).
+
+eval([Stmt|[]], State0) ->
+    %% Final call, so ignore returned state.
+    {Result, _State} = statement(Stmt, State0),
+    Result;
+eval([Stmt|Stmts], State0) ->
+    %% Ignore any intermediate results.
+    {_Result, State} = statement(Stmt, State0),
+    eval(Stmts, State).
 
 %% @private
-statement({update, {var, _, Variable}, Expression}) ->
+statement({update, {var, _, Variable}, Expression}, State) ->
     Actor = get(actor),
 
     %% Create a new variable.
     {ok, _} = lasp:declare(Variable, ?SET),
 
     %% Evaluate the expression.
-    case expression(Expression) of
+    case expression(Expression, State) of
         %% If the result of the expression needs to spawn a function to
         %% bind a value to our variable, such as for a map and fold;
         %% then return a closure that can be called immediately with the
         %% variable to bind to.
         Function when is_function(Function) ->
-            Function(Variable);
+            {Function(Variable), State};
         %% Else, if we get a value back, we can directly bind.
         Value ->
             {ok, {_, _, _, V}} = lasp:update(Variable,
                                             {add_all, Value},
                                             Actor),
             put({variable, Variable}, V),
-            V
+            V1 = ?SET:value(V),
+            {V1, State}
     end;
-statement({query, {var, _, Variable}}) ->
+statement({query, {var, _, Variable}}, State) ->
     %% @todo Probably need a new lasp operation for this.
     V = get({variable, Variable}),
     {ok, {_, _, _, Value}} = lasp:read(Variable, V),
-    ?SET:value(Value);
-statement(Stmt) ->
-    Stmt.
+    {?SET:value(Value), State};
+statement(Stmt, State) ->
+    {Stmt, State}.
 
 %% @private
-expression({map, {var, _, Var}, {function, {'+', _}}, {integer, _, Val}}) ->
+expression({map, {var, _, Var}, {function, {'+', _}}, Val}, _State) ->
     fun(Variable) ->
 
             %% Produce a closure that will be executed for the map
@@ -83,13 +109,13 @@ expression({map, {var, _, Var}, {function, {'+', _}}, {integer, _, Val}}) ->
             put({variable, Variable}, {strict, V})
 
     end;
-expression([Expr|Exprs]) ->
-    [expression(Expr)|expression(Exprs)];
-%% @todo: Remove underscore.
-expression({integer, _, I}) ->
-    I;
-expression({iota, {integer, _, F}}) ->
-    lists:seq(1, F);
-expression(Expr) ->
+expression([Expr|Exprs], State) ->
+    [expression(Expr, State)|expression(Exprs, State)];
+expression(V, _State) when is_integer(V) ->
+    lager:info("Integer expression: ~p", [V]),
+    V;
+expression({iota, V}, _State) ->
+    lists:seq(1, V);
+expression(Expr, _State) ->
+    lager:info("Expression not caught: ~p", [Expr]),
     Expr.
-

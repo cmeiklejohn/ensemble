@@ -31,11 +31,10 @@
          all/0]).
 
 %% tests
--compile([export_all]).
+-export([iota_test/1,
+         map_test/1]).
 
 -include_lib("common_test/include/ct.hrl").
--include_lib("eunit/include/eunit.hrl").
--include_lib("kernel/include/inet.hrl").
 
 %% ===================================================================
 %% common_test callbacks
@@ -56,8 +55,8 @@ end_per_testcase(_, _Config) ->
     ok.
 
 all() ->
-    [eval_test,
-     iota_test].
+    [iota_test,
+     map_test].
 
 %% ===================================================================
 %% tests
@@ -65,20 +64,16 @@ all() ->
 
 -include("ensemble.hrl").
 
-%% @doc Parse a full program
-eval_test(_Config) ->
-    Filename = code:priv_dir(ensemble) ++ "/test.ens",
-    {ok, Binary} = file:read_file(Filename),
-    ct:pal("Read file: ~p", [Binary]),
-    List = binary_to_list(Binary),
-    {ok, Tokens, _EndLine} = ?LEXER:string(List),
-    ct:pal("Tokenized file: ~p", [Tokens]),
-    {ok, ParseTree} = ?PARSER:parse(Tokens),
-    ct:pal("Parse tree: ~p", [ParseTree]),
-    ?assertMatch([2,3,4,5], ensemble_interpreter:eval(ParseTree)).
-
 %% @doc Verify the iota behaviour.
 iota_test(_Config) ->
-    {ok, Tokens, _EndLine} = ?LEXER:string("A <- i10\nA"),
-    {ok, ParseTree} = ?PARSER:parse(Tokens),
-    ?assertMatch([1,2,3,4,5,6,7,8,9,10], ensemble_interpreter:eval(ParseTree)).
+    Program = io_lib:format("A <- i10", []),
+    [1,2,3,4,5,6,7,8,9,10] = ?INTERPRETER:eval(Program),
+    Program2 = io_lib:format("A <- i10; A", []),
+    [1,2,3,4,5,6,7,8,9,10] = ?INTERPRETER:eval(Program2),
+    ok.
+
+%% @doc Verify the map behaviour.
+map_test(_Config) ->
+    Program = io_lib:format("A <- i10; B <- A+1; B", []),
+    [2,3,4,5,6,7,8,9,10,11] = ?INTERPRETER:eval(Program),
+    ok.
