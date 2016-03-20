@@ -23,12 +23,19 @@ Print the value of a variable.
 {1 2 3 4}
 ```
 
-Map the set contents using a binary function and a value and assign
-the results to another variable.
+Map the set contents using a binary function like addition with a value
+and assign the results to another variable.
 
 ```
 > B <- A+1
 {2 3 4 5}
+```
+
+Or, try multiplication.
+
+```
+> C <- A*2
+{2 4 6 8}
 ```
 
 Create a new set using the `iota` operation that will generate a series

@@ -96,12 +96,20 @@ statement(Stmt, State) ->
     {Stmt, State}.
 
 %% @private
-expression({map, {var, _, Var}, {function, {'+', _}}, Val}, State0) ->
+expression({map, {var, _, Var}, {function, {Function0, _}}, Val}, State0) ->
     Fun = fun(Variable, #state{variables=Variables0}=State) ->
+
+            %% Generate an Erlang anonymous function.
+            Function = case Function0 of
+                '+' ->
+                    fun(X) -> X + Val end;
+                '*' ->
+                    fun(X) -> X * Val end
+            end,
 
             %% Produce a closure that will be executed for the map
             %% operation.
-            ok = lasp:map(Var, fun(X) -> X + Val end, Variable),
+            ok = lasp:map(Var, Function, Variable),
 
             %% If we perform an operation on a variable, such as a map,
             %% we know the value is going to change.  Therefore, modify

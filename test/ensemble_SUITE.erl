@@ -32,7 +32,8 @@
 
 %% tests
 -export([iota_test/1,
-         map_test/1]).
+         map_plus_test/1,
+         map_times_test/1]).
 
 -include_lib("common_test/include/ct.hrl").
 
@@ -56,8 +57,11 @@ end_per_testcase(_, _Config) ->
     ok.
 
 all() ->
-    [iota_test,
-     map_test].
+    [
+     iota_test,
+     map_plus_test,
+     map_times_test
+    ].
 
 %% ===================================================================
 %% tests
@@ -74,7 +78,13 @@ iota_test(_Config) ->
     ok.
 
 %% @doc Verify the map behaviour.
-map_test(_Config) ->
+map_plus_test(_Config) ->
     Program = io_lib:format("A <- i10; B <- A+1; B", []),
     [2,3,4,5,6,7,8,9,10,11] = ?INTERPRETER:eval(Program),
+    ok.
+
+%% @doc Verify the map behaviour.
+map_times_test(_Config) ->
+    Program2 = io_lib:format("A <- i5; B <- A*2; B", []),
+    [2,4,6,8,10] = ?INTERPRETER:eval(Program2),
     ok.

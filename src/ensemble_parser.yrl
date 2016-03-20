@@ -2,7 +2,7 @@ Nonterminals
 statements statement expression int_list function.
 
 Terminals
-'<-' '+' '/' 'i' var integer nl.
+'<-' '+' '*' '/' 'i' var integer nl.
 
 Rootsymbol
 statements.
@@ -25,6 +25,7 @@ expression -> int_list : '$1'.
 expression -> integer : unwrap('$1').
 
 function -> '+' : {function, '$1'}.
+function -> '*' : {function, '$1'}.
 
 int_list -> integer integer : ['$1', '$2'].
 int_list -> integer int_list : ['$1'] ++ '$2'.
