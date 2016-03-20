@@ -1,0 +1,3 @@
+-define(LEXER, ensemble_lexer).
+-define(PARSER, ensemble_parser).
+-define(SET, lasp_orset).

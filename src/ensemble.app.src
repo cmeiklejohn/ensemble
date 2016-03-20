@@ -7,6 +7,6 @@
      {licenses,["Apache"]},
      {registered,[]},
      {applications,
-         [kernel,stdlib,lasp]},
+         [kernel,stdlib,lager,lasp]},
      {mod,{ensemble_app,[]}},
      {env,[]}]}.

@@ -21,8 +21,7 @@
 -module(ensemble).
 -author("Christopher S. Meiklejohn <christopher.meiklejohn@gmail.com>").
 
--define(LEXER, ensemble_lexer).
--define(PARSER, ensemble_parser).
+-include("ensemble.hrl").
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -30,9 +29,70 @@
 
 -export([eval/1]).
 
-%% @doc Evaluate an application.
-eval(ParseTree) ->
-    lager:info("ParseTree: ~p", [ParseTree]).
+%% @doc Evaluate a program.
+eval([Stmt|[]]) ->
+    %% Use the node name as the actor identifier, for now.
+    put(actor, term_to_binary(node())),
+
+    statement(Stmt);
+eval([Stmt|Stmts]) ->
+    statement(Stmt),
+    eval(Stmts).
+
+%% @private
+statement({update, {var, _, Variable}, Expression}) ->
+    Actor = get(actor),
+
+    %% Create a new variable.
+    {ok, _} = lasp:declare(Variable, ?SET),
+
+    %% Evaluate the expression.
+    case expression(Expression) of
+        %% If the result of the expression needs to spawn a function to
+        %% bind a value to our variable, such as for a map and fold;
+        %% then return a closure that can be called immediately with the
+        %% variable to bind to.
+        Function when is_function(Function) ->
+            Function(Variable);
+        %% Else, if we get a value back, we can directly bind.
+        Value ->
+            {ok, {_, _, _, V}} = lasp:update(Variable,
+                                            {add_all, Value},
+                                            Actor),
+            put({variable, Variable}, V),
+            V
+    end;
+statement({query, {var, _, Variable}}) ->
+    %% @todo Probably need a new lasp operation for this.
+    V = get({variable, Variable}),
+    {ok, {_, _, _, Value}} = lasp:read(Variable, V),
+    ?SET:value(Value);
+statement(Stmt) ->
+    Stmt.
+
+%% @private
+expression({map, {var, _, Var}, {function, {'+', _}}, {integer, _, Val}}) ->
+    fun(Variable) ->
+
+            %% Produce a closure that will be executed for the map
+            %% operation.
+            ok = lasp:map(Var, fun(X) -> X + Val end, Variable),
+
+            %% If we perform an operation on a variable, such as a map,
+            %% we know the value is going to change.  Therefore, modify
+            %% our cache of known values to show that the next read
+            %% operation should be strict, to guarantee
+            %% read-your-own-writes.
+            V = get({variable, Variable}),
+            put({variable, Variable}, {strict, V})
+
+    end;
+expression([Expr|Exprs]) ->
+    [expression(Expr)|expression(Exprs)];
+expression({integer, _, I}) ->
+    I;
+expression(Expr) ->
+    Expr.
 
 -ifdef(TEST).
 
@@ -79,14 +139,5 @@ over_test() ->
     {ok, ParseTree} = ?PARSER:parse(Tokens),
     ParserExpected = [{foldr,{function,{'+',1}},{query,{var,1,'A'}}}],
     ?assertMatch(ParserExpected, ParseTree).
-
-%% @doc Parse a full program
-file_test() ->
-    Filename = code:priv_dir(ensemble) ++ "/test.ens",
-    {ok, Binary} = file:read_file(Filename),
-    List = binary_to_list(Binary),
-    {ok, Tokens, _EndLine} = ?LEXER:string(List),
-    {ok, ParseTree} = ?PARSER:parse(Tokens),
-    ?assertMatch(true, ensemble:eval(ParseTree)).
 
 -endif.
