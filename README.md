@@ -25,7 +25,7 @@ Map the set contents using a binary function and a value and assign
 the results to another variable.
 
 ```
-> B <- A+2
+> B <- A+1
 {2 3 4 5}
 ```
 
