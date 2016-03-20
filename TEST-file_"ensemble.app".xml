@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite tests="5" failures="0" errors="1" skipped="0" time="0.122" name="file &quot;ensemble.app&quot;">
+  <testcase time="0.000" name="ensemble:0 assignment_test">
+    <system-out>
+    </system-out>
+  </testcase>
+  <testcase time="0.000" name="ensemble:0 print_test">
+    <system-out>
+    </system-out>
+  </testcase>
+  <testcase time="0.000" name="ensemble:0 map_test">
+    <system-out>
+    </system-out>
+  </testcase>
+  <testcase time="0.000" name="ensemble:0 over_test">
+    <system-out>
+    </system-out>
+  </testcase>
+  <testcase time="0.000" name="ensemble:0 file_test">
+    <error type="error">
+::in function ensemble:file_test/0 (/Users/cmeiklejohn/Documents/ensemble/_build/test/lib/ensemble/src/ensemble.erl, line 86)
+**error:{badmatch,{error,enoent}}
+    </error>
+    <system-out>
+    </system-out>
+  </testcase>
+</testsuite>

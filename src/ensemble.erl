@@ -28,6 +28,12 @@
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
+-export([eval/1]).
+
+%% @doc Evaluate an application.
+eval(ParseTree) ->
+    lager:info("ParseTree: ~p", [ParseTree]).
+
 -ifdef(TEST).
 
 %% @doc Ensure we can parse assignments.
@@ -74,18 +80,13 @@ over_test() ->
     ParserExpected = [{foldr,{function,{'+',1}},{query,{var,1,'A'}}}],
     ?assertMatch(ParserExpected, ParseTree).
 
-% parse_assignment_test() ->
-%     {ok, Tokens, _Endline} = ensemble_lexer:string("A <- 1 2 3 4"),
-%     {ok, ParseTree} = ensemble_parser:parse(Tokens),
-%     Expected = true,
-%     ?assertMatch(Expected, ParseTree).
-
 %% @doc Parse a full program
 file_test() ->
     Filename = code:priv_dir(ensemble) ++ "/test.ens",
     {ok, Binary} = file:read_file(Filename),
     List = binary_to_list(Binary),
     {ok, Tokens, _EndLine} = ?LEXER:string(List),
-    ?assertMatch({ok, _ParseTree}, ?PARSER:parse(Tokens)).
+    {ok, ParseTree} = ?PARSER:parse(Tokens),
+    ?assertMatch(true, ensemble:eval(ParseTree)).
 
 -endif.

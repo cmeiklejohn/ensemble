@@ -1,0 +1,13 @@
+language: erlang
+otp_release:
+  - 18.1
+install:
+  - make
+script:
+  - make test
+  - make xref
+  - make dialyzer
+notifications:
+  email: christopher.meiklejohn@gmail.com
+  irc: "irc.freenode.org#lasp-lang"
+sudo: false
