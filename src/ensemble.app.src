@@ -1,0 +1,12 @@
+{application,ensemble,
+    [{description,
+         "Distributed programming lanauge for sets."},
+     {vsn,"0.0.1"},
+     {maintainers,["Christopher S. Meiklejohn"]},
+     {links,[{"Github","https://github.com/cmeiklejohn/ensemble"}]},
+     {licenses,["Apache"]},
+     {registered,[]},
+     {applications,
+         [kernel,stdlib,lasp]},
+     {mod,{ensemble_app,[]}},
+     {env,[]}]}.
