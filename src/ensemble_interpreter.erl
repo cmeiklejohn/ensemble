@@ -31,7 +31,8 @@
 
 -record(state,
         {
-         actor :: binary()
+         actor :: binary(),
+         variables :: dict:dict()
         }).
 
 %% @doc Evaluate a program.
@@ -46,12 +47,12 @@ eval(Program) ->
 
     %% Generate an actor identifier for execution of this application.
     Actor = term_to_binary(node()),
-    lager:info("Generated actor identifier for program: ~p",
-               [Actor]),
+    lager:info("Generated actor identifier for program: ~p", [Actor]),
 
     %% Finally, evaluate the program.
-    eval(ParseTree, #state{actor=Actor}).
+    eval(ParseTree, #state{actor=Actor, variables=dict:new()}).
 
+%% @private
 eval([Stmt|[]], State0) ->
     %% Final call, so ignore returned state.
     {Result, _State} = statement(Stmt, State0),
@@ -62,38 +63,44 @@ eval([Stmt|Stmts], State0) ->
     eval(Stmts, State).
 
 %% @private
-statement({update, {var, _, Variable}, Expression}, #state{actor=Actor}=State) ->
+statement({update, {var, _, Variable}, Expression},
+          #state{actor=Actor, variables=Variables0}=State0) ->
     %% Create a new variable.
     {ok, _} = lasp:declare(Variable, ?SET),
 
     %% Evaluate the expression.
-    case expression(Expression, State) of
+    case expression(Expression, State0) of
         %% If the result of the expression needs to spawn a function to
         %% bind a value to our variable, such as for a map and fold;
         %% then return a closure that can be called immediately with the
         %% variable to bind to.
-        Function when is_function(Function) ->
-            {Function(Variable), State};
+        {Function, State1} when is_function(Function) ->
+            Function(Variable, State1);
         %% Else, if we get a value back, we can directly bind.
-        Value ->
+        {Value, State1} ->
             {ok, {_, _, _, V}} = lasp:update(Variable,
                                             {add_all, Value},
                                             Actor),
-            put({variable, Variable}, V),
             V1 = ?SET:value(V),
-            {V1, State}
+            Variables = dict:store(Variable, V, Variables0),
+            {V1, State1#state{variables=Variables}}
     end;
-statement({query, {var, _, Variable}}, State) ->
+statement({query, {var, _, Variable}}, #state{variables=Variables0}=State) ->
     %% @todo Probably need a new lasp operation for this.
-    V = get({variable, Variable}),
-    {ok, {_, _, _, Value}} = lasp:read(Variable, V),
+    Previous = case dict:find(Variable, Variables0) of
+        {ok, V} ->
+            V;
+        _ ->
+            undefined
+    end,
+    {ok, {_, _, _, Value}} = lasp:read(Variable, Previous),
     {?SET:value(Value), State};
 statement(Stmt, State) ->
     {Stmt, State}.
 
 %% @private
-expression({map, {var, _, Var}, {function, {'+', _}}, Val}, _State) ->
-    fun(Variable) ->
+expression({map, {var, _, Var}, {function, {'+', _}}, Val}, State0) ->
+    Fun = fun(Variable, #state{variables=Variables0}=State) ->
 
             %% Produce a closure that will be executed for the map
             %% operation.
@@ -104,17 +111,24 @@ expression({map, {var, _, Var}, {function, {'+', _}}, Val}, _State) ->
             %% our cache of known values to show that the next read
             %% operation should be strict, to guarantee
             %% read-your-own-writes.
-            V = get({variable, Variable}),
-            put({variable, Variable}, {strict, V})
+            Previous = case dict:find(Variable, Variables0) of
+                {ok, V} ->
+                    V;
+                _ ->
+                    undefined
+            end,
+            Variables = dict:store(Variable, {strict, Previous}, Variables0),
+            {Previous, State#state{variables=Variables}}
 
-    end;
-expression([Expr|Exprs], State) ->
-    [expression(Expr, State)|expression(Exprs, State)];
-expression(V, _State) when is_integer(V) ->
-    lager:info("Integer expression: ~p", [V]),
-    V;
-expression({iota, V}, _State) ->
-    lists:seq(1, V);
-expression(Expr, _State) ->
+    end,
+    {Fun, State0};
+expression([Expr|Exprs], State0) ->
+    {Value, State} = expression(Expr, State0),
+    [Value|expression(Exprs, State)];
+expression(V, State) when is_integer(V) ->
+    {V, State};
+expression({iota, V}, State) ->
+    {lists:seq(1, V), State};
+expression(Expr, State) ->
     lager:info("Expression not caught: ~p", [Expr]),
-    Expr.
+    {Expr, State}.
