@@ -57,7 +57,7 @@ end_per_testcase(_, _Config) ->
 
 all() ->
     [eval_test,
-     iota_0_test].
+     iota_test].
 
 %% ===================================================================
 %% tests
@@ -78,7 +78,7 @@ eval_test(_Config) ->
     ?assertMatch([2,3,4,5], ensemble_interpreter:eval(ParseTree)).
 
 %% @doc Verify the iota behaviour.
-iota_0_test(_Config) ->
+iota_test(_Config) ->
     {ok, Tokens, _EndLine} = ?LEXER:string("A <- i10\nA"),
     {ok, ParseTree} = ?PARSER:parse(Tokens),
-    ?assertMatch([0,1,2,3,4,5,6,7,8,9,10], ensemble_interpreter:eval(ParseTree)).
+    ?assertMatch([1,2,3,4,5,6,7,8,9,10], ensemble_interpreter:eval(ParseTree)).

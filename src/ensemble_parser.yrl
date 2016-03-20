@@ -17,7 +17,7 @@ statements -> statements nl : '$1'.
 statement -> var '<-' expression : {update, '$1', '$3'}.
 statement -> expression : '$1'.
 
-expression -> 'i' integer : {iota, 0, '$2'}.
+expression -> 'i' integer : {iota, '$2'}.
 expression -> var function expression : {map, '$1', '$2', '$3'}.
 expression -> function '/' expression : {foldr, '$1', '$3'}.
 expression -> var : {query, '$1'}.

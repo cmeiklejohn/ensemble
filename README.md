@@ -30,11 +30,11 @@ the results to another variable.
 ```
 
 Create a new set using the `iota` operation that will generate a series
-of values; here, the set of values is from 0 to 1000.
+of values; here, the set of values is from 1 to 10.
 
 ```
 > C <- i10
-{0 1 2 3 4 5 6 7 8 9 10}
+{1 2 3 4 5 6 7 8 9 10}
 ```
 
 ## Coming Soon

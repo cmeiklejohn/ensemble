@@ -88,8 +88,8 @@ expression([Expr|Exprs]) ->
 %% @todo: Remove underscore.
 expression({integer, _, I}) ->
     I;
-expression({iota, S, {integer, _, F}}) ->
-    lists:seq(S, F);
+expression({iota, {integer, _, F}}) ->
+    lists:seq(1, F);
 expression(Expr) ->
     Expr.
 
