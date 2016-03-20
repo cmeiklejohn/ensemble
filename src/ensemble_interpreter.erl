@@ -29,10 +29,12 @@
 
 -export([eval/1]).
 
--record(state, {}).
+-record(state,
+        {
+         actor :: binary()
+        }).
 
 %% @doc Evaluate a program.
-%% @todo Move actor to state.
 %% @todo Replace value calls.
 %% @todo Move scope to state.
 eval(Program) ->
@@ -46,10 +48,9 @@ eval(Program) ->
     Actor = term_to_binary(node()),
     lager:info("Generated actor identifier for program: ~p",
                [Actor]),
-    put(actor, Actor),
 
     %% Finally, evaluate the program.
-    eval(ParseTree, #state{}).
+    eval(ParseTree, #state{actor=Actor}).
 
 eval([Stmt|[]], State0) ->
     %% Final call, so ignore returned state.
@@ -61,9 +62,7 @@ eval([Stmt|Stmts], State0) ->
     eval(Stmts, State).
 
 %% @private
-statement({update, {var, _, Variable}, Expression}, State) ->
-    Actor = get(actor),
-
+statement({update, {var, _, Variable}, Expression}, #state{actor=Actor}=State) ->
     %% Create a new variable.
     {ok, _} = lasp:declare(Variable, ?SET),
 
