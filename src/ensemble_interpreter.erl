@@ -36,8 +36,6 @@
         }).
 
 %% @doc Evaluate a program.
-%% @todo Replace value calls.
-%% @todo Move scope to state.
 eval(Program) ->
     %% First, apply lexical analysis.
     {ok, Tokens, _EndLine} = ?LEXER:string(Program),
@@ -81,12 +79,11 @@ statement({update, {var, _, Variable}, Expression},
             {ok, {_, _, _, V}} = lasp:update(Variable,
                                             {add_all, Value},
                                             Actor),
-            V1 = ?SET:value(V),
+            V1 = lasp_type:value(?SET, V),
             Variables = dict:store(Variable, V, Variables0),
             {V1, State1#state{variables=Variables}}
     end;
 statement({query, {var, _, Variable}}, #state{variables=Variables0}=State) ->
-    %% @todo Probably need a new lasp operation for this.
     Previous = case dict:find(Variable, Variables0) of
         {ok, V} ->
             V;
@@ -94,7 +91,7 @@ statement({query, {var, _, Variable}}, #state{variables=Variables0}=State) ->
             undefined
     end,
     {ok, {_, _, _, Value}} = lasp:read(Variable, Previous),
-    {?SET:value(Value), State};
+    {lasp_type:value(?SET, Value), State};
 statement(Stmt, State) ->
     {Stmt, State}.
 
