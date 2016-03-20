@@ -49,6 +49,7 @@ end_per_suite(_Config) ->
     _Config.
 
 init_per_testcase(_Case, Config) ->
+    lasp:reset(),
     Config.
 
 end_per_testcase(_, _Config) ->
