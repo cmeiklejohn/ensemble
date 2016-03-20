@@ -19,11 +19,18 @@ Print the value of a variable.
 A
 ```
 
-Map the array contents using a binary function and a value and assign
+Map the set contents using a binary function and a value and assign
 the results to another variable.
 
 ```
 B <- A+2
+```
+
+Create a new set using the `iota` operation that will generate a series
+of values; here, the set of values is from 0 to 1000.
+
+```
+C <- i1000
 ```
 
 ## Coming Soon

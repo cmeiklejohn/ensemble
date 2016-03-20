@@ -85,8 +85,11 @@ expression({map, {var, _, Var}, {function, {'+', _}}, {integer, _, Val}}) ->
     end;
 expression([Expr|Exprs]) ->
     [expression(Expr)|expression(Exprs)];
+%% @todo: Remove underscore.
 expression({integer, _, I}) ->
     I;
+expression({iota, S, {integer, _, F}}) ->
+    lists:seq(S, F);
 expression(Expr) ->
     Expr.
 

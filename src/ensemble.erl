@@ -29,6 +29,15 @@
 
 -ifdef(TEST).
 
+%% @doc Parse the iota statement.
+iota_0_test() ->
+    {ok, Tokens, _EndLine} = ?LEXER:string("A <- i100"),
+    LexerExpected = [{var,1,'A'},{'<-',1},{i,1},{integer,1,100}],
+    ?assertMatch(LexerExpected, Tokens),
+    {ok, ParseTree} = ?PARSER:parse(Tokens),
+    ParserExpected = [{update,{var,1,'A'},{iota,0,{integer,1,100}}}],
+    ?assertMatch(ParserExpected, ParseTree).
+
 %% @doc Ensure we can parse assignments.
 assignment_test() ->
     {ok, Tokens, _EndLine} = ?LEXER:string("A <- 1 2 3 4"),
