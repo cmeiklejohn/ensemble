@@ -27,7 +27,7 @@ packageclean:
 ## Test targets
 ##
 
-check: test xref dialyzer
+check: test xref dialyzer lint
 
 test: ct eunit
 
