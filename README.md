@@ -1,7 +1,9 @@
 # Ensemble
 
 Ensemble is a prototype of a distributed, convergent, set-based
-programming language inspired by APL.
+programming language inspired by APL.  Ensemble is build on top of the
+[Lasp](http://github.com/lasp-lang/lasp) epidemic broadcast runtime
+system for CRDTs.
 
 <img src="https://travis-ci.org/cmeiklejohn/ensemble.svg" />
 
