@@ -7,7 +7,7 @@ system for CRDTs.
 
 <img src="https://travis-ci.org/cmeiklejohn/ensemble.svg" />
 
-## Running a repl.
+## Running a REPL
 
 You can start a Read-Eval-Print-Loop fairly easily.
 
