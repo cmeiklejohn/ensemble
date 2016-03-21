@@ -64,7 +64,6 @@ Semi-colons can also be used to seperate statements on the same line.
 ## Coming Soon
 
 * Foldr
-* Product
 * Union
 * Intersection
 * Compliment
