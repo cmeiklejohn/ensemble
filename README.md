@@ -38,6 +38,14 @@ Or, try multiplication.
 {2 4 6 8}
 ```
 
+You don't need to assign it either, it can evaluate like any other
+expression in the language.
+
+```
+> A*2
+{2 4 6 8}
+```
+
 Create a new set using the `iota` operation that will generate a series
 of values; here, the set of values is from 1 to 10.
 
