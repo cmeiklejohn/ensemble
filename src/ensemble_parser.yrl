@@ -40,8 +40,8 @@ expression -> var product var : {process, {product, '$1', '$3'}}.
 expression -> int_list : '$1'.
 expression -> integer : unwrap('$1').
 
-int_list -> integer integer : ['$1', '$2'].
-int_list -> integer int_list : ['$1'] ++ '$2'.
+int_list -> integer integer : [unwrap('$1'), unwrap('$2')].
+int_list -> integer int_list : [unwrap('$1')] ++ '$2'.
 
 %% Function types.
 function -> '+' : {function, '$1'}.

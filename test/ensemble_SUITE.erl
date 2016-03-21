@@ -59,8 +59,9 @@ all() ->
      iota_test,
      map_plus_test,
      map_times_test,
-     map_without_assignment,
-     product_without_assignment
+     map_without_assignment_test,
+     product_without_assignment_test,
+     assignment_test
     ].
 
 %% ===================================================================
@@ -90,13 +91,19 @@ map_times_test(_Config) ->
     ok.
 
 %% @doc Verify the map behaviour.
-map_without_assignment(_Config) ->
+map_without_assignment_test(_Config) ->
     Program2 = io_lib:format("A <- i5; A*2", []),
     <<"{ 2 4 6 8 10 }">> = ?INTERPRETER:eval(Program2),
     ok.
 
-%% @doc Verify the map behaviour.
-product_without_assignment(_Config) ->
+%% @doc Verify the product behaviour.
+product_without_assignment_test(_Config) ->
     Program2 = io_lib:format("A <- i2; B <- i2; A*B", []),
     <<"{ (1, 1) (1, 2) (2, 1) (2, 2) }">> = ?INTERPRETER:eval(Program2),
+    ok.
+
+%% @doc Verify the assignment behaviour.
+assignment_test(_Config) ->
+    Program = io_lib:format("A <- 1 2 3 4", []),
+    <<"{ 1 2 3 4 }">> = ?INTERPRETER:eval(Program),
     ok.

@@ -142,9 +142,11 @@ expression({process,
 
     %% Return variable.
     {{var, Line, Product}, State0};
-expression([Expr|Exprs], State0) ->
-    {Value, State} = expression(Expr, State0),
-    [Value|expression(Exprs, State)];
+expression(List0, State0) when is_list(List0) ->
+    lists:foldl(fun(Expr, {List, State}) ->
+                        {V, S} = expression(Expr, State),
+                        {List ++ [V], S}
+                end, {[], State0}, List0);
 expression(V, State) when is_integer(V) ->
     {V, State};
 %% Do not evaluate variables any further; it's up to the pretty printer
