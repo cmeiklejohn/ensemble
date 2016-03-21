@@ -61,6 +61,11 @@ eval([Stmt|Stmts], State0) ->
     eval(Stmts, State).
 
 %% @private
+%%
+%% Update is an assignment statement, where the expression on the rhs is
+%% evaluated and assigned to the variable on the lhs; the variable on
+%% the lhs may not exist, so the variable needs to first be delcared.
+%%
 statement({update, {var, _, Variable}, Expression},
           #state{actor=Actor, variables=Variables0}=State0) ->
     %% Create a new variable.
@@ -83,7 +88,19 @@ statement({update, {var, _, Variable}, Expression},
             Variables = dict:store(Variable, V, Variables0),
             {V1, State1#state{variables=Variables}}
     end;
-statement({query, {var, _, Variable}}, #state{variables=Variables0}=State) ->
+%% Otherwise, the statement must be an expression that evaluates to a
+%% value that will be returned to the user.  Attempt to evaluate this
+%% expression.
+statement(Stmt, State) ->
+    expression(Stmt, State).
+
+%% @private
+%%
+%% If a variable sits alone by itself, we want to query the variable for
+%% the latest value while ensuring this value is not earlier than some
+%% previously observed value: ie. preserving causality.
+%%
+expression({query, {var, _, Variable}}, #state{variables=Variables0}=State) ->
     Previous = case dict:find(Variable, Variables0) of
         {ok, V} ->
             V;
@@ -92,10 +109,6 @@ statement({query, {var, _, Variable}}, #state{variables=Variables0}=State) ->
     end,
     {ok, {_, _, _, Value}} = lasp:read(Variable, Previous),
     {lasp_type:value(?SET, Value), State};
-statement(Stmt, State) ->
-    {Stmt, State}.
-
-%% @private
 expression({map, {var, _, Var}, {function, {Function0, _}}, Val}, State0) ->
     Fun = fun(Variable, #state{variables=Variables0}=State) ->
 
