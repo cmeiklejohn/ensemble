@@ -64,7 +64,8 @@ eval([Stmt|Stmts], State0) ->
 %% evaluated and assigned to the variable on the lhs; the variable on
 %% the lhs may not exist, so the variable needs to first be delcared.
 %%
-statement({update, {var, Line, Variable}, Expression}, #state{actor=Actor}=State0) ->
+statement({update, {var, Line, Variable}, Expression},
+          #state{actor=Actor}=State0) ->
     %% Create a new variable.
     {ok, _} = lasp:declare(Variable, ?SET),
 
@@ -127,6 +128,20 @@ expression({process,
 
     %% Return variable.
     {{var, Line, Destination}, State0};
+expression({process,
+            {product, {var, Line, Left}, {var, Line, Right}}},
+           State0) ->
+
+    %% Create a shadow variable used to store the result of the fold
+    %% operation; this will get an anonymous global variable.
+    %%
+    {ok, {Product, _, _, _}} = lasp:declare(?SET),
+
+    %% Execute the operation.
+    ok = lasp:product(Left, Right, Product),
+
+    %% Return variable.
+    {{var, Line, Product}, State0};
 expression([Expr|Exprs], State0) ->
     {Value, State} = expression(Expr, State0),
     [Value|expression(Exprs, State)];
@@ -143,13 +158,14 @@ expression(Expr, _State) ->
     exit(badarg).
 
 %% @private
+%% @todo: Block for at least the initial transition off of the bottom.
 pp({var, _, Variable}) ->
-    %% @todo: Block for at least the initial transition off of the
-    %% bottom value; not sure how to handle this in practice.
     {ok, {_, _, _, Value0}} = lasp:read(Variable, {strict, undefined}),
     Value = lasp_type:value(?SET, Value0),
     pp(Value);
 pp(List) when is_list(List) ->
-    list_to_binary("{ " ++
-                   [io_lib:format("~p ", [Item]) || Item <- List] ++
-                   "}").
+    list_to_binary("{ " ++ [pp(Item) || Item <- List] ++ "}");
+pp({A, B}) ->
+    io_lib:format("(~p, ~p) ", [A, B]);
+pp(X) ->
+    io_lib:format("~p ", [X]).
