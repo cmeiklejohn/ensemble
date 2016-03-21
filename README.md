@@ -61,7 +61,6 @@ A <- i10; A
 * Compliment
 * REPL
 * More!
-* Print should use proper set notation.
 * How to express operations like map by themselves.
 
 ## Copyright

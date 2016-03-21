@@ -54,7 +54,7 @@ eval(Program) ->
 eval([Stmt|[]], State0) ->
     %% Final call, so ignore returned state.
     {Result, _State} = statement(Stmt, State0),
-    Result;
+    pp(Result);
 eval([Stmt|Stmts], State0) ->
     %% Ignore any intermediate results.
     {_Result, State} = statement(Stmt, State0),
@@ -137,3 +137,9 @@ expression({iota, V}, State) ->
 expression(Expr, State) ->
     lager:info("Expression not caught: ~p", [Expr]),
     {Expr, State}.
+
+%% @private
+pp(List) when is_list(List) ->
+    list_to_binary("{ " ++
+                   [io_lib:format("~p ", [Item]) || Item <- List] ++
+                   "}").
