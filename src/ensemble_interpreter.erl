@@ -31,8 +31,7 @@
 
 -record(state,
         {
-         actor :: binary(),
-         variables :: dict:dict()
+         actor :: binary()
         }).
 
 %% @doc Evaluate a program.
@@ -47,7 +46,7 @@ eval(Program) ->
     Actor = term_to_binary(node()),
 
     %% Finally, evaluate the program.
-    eval(ParseTree, #state{actor=Actor, variables=dict:new()}).
+    eval(ParseTree, #state{actor=Actor}).
 
 %% @private
 eval([Stmt|[]], State0) ->
@@ -65,7 +64,7 @@ eval([Stmt|Stmts], State0) ->
 %% evaluated and assigned to the variable on the lhs; the variable on
 %% the lhs may not exist, so the variable needs to first be delcared.
 %%
-statement({update, {var, _, Variable}, Expression}, #state{actor=Actor}=State0) ->
+statement({update, {var, Line, Variable}, Expression}, #state{actor=Actor}=State0) ->
     %% Create a new variable.
     {ok, _} = lasp:declare(Variable, ?SET),
 
@@ -73,33 +72,23 @@ statement({update, {var, _, Variable}, Expression}, #state{actor=Actor}=State0) 
     case expression(Expression, State0) of
         %% We got back the identifier of a variable that contains the
         %% state that we want.
-        {{var, _, TheirId}, #state{variables=Variables0}=State1} ->
+        {{var, _, TheirId}, State1} ->
 
             %% Bind our new variable directly to the shadow variable.
             ok = lasp:bind_to(Variable, TheirId),
 
-            %% Wait for new variable to change from bottom state and
-            %% return the result.
-            {ok, {_, _, _, V1}} = lasp:read(Variable, {strict, undefined}),
-            Value = lasp_type:value(?SET, V1),
-            Variables = dict:store(Variable, V1, Variables0),
-
-            %% Return value and updated cache.
-            {Value, State1#state{variables=Variables}};
+            %% Return variable.
+            {{var, Line, Variable}, State1};
 
         %% Else, we got back an literal value that we can directly bind
         %% to the variable.
-        {Literal, #state{variables=Variables0}=State1} ->
-            {ok, {_, _, _, V}} = lasp:update(Variable,
-                                            {add_all, Literal},
-                                            Actor),
+        {Literal, State1} ->
 
-            %% Return current non-CRDT value to the user.
-            V1 = lasp_type:value(?SET, V),
+            %% Bind updated value.
+            {ok, _} = lasp:update(Variable, {add_all, Literal}, Actor),
 
-            %% Cache last observed value.
-            Variables = dict:store(Variable, V, Variables0),
-            {V1, State1#state{variables=Variables}}
+            %% Return variable.
+            {{var, Line, Variable}, State1}
 
     end;
 %% Otherwise, the statement must be an expression that evaluates to a
@@ -118,7 +107,7 @@ statement(Stmt, State) ->
 %%
 expression({process,
             {map, {var, Line, Source}, {function, {Function0, _}}, Val}},
-           #state{variables=Variables0}=State0) ->
+           State0) ->
 
     %% Generate an Erlang anonymous function.
     Function = case Function0 of
@@ -136,21 +125,8 @@ expression({process,
     %% Execute the map operation.
     ok = lasp:map(Source, Function, Destination),
 
-    %% If we perform an operation on a variable, such as a map,
-    %% we know the value is going to change.  Therefore, modify
-    %% our cache of known values to show that the next read
-    %% operation should be strict, to guarantee
-    %% read-your-own-writes.
-    Previous = case dict:find(Destination, Variables0) of
-        {ok, V} ->
-            V;
-        _ ->
-            undefined
-    end,
-    Variables = dict:store(Destination, {strict, Previous}, Variables0),
-
     %% Return variable.
-    {{var, Line, Destination}, State0#state{variables=Variables}};
+    {{var, Line, Destination}, State0};
 expression([Expr|Exprs], State0) ->
     {Value, State} = expression(Expr, State0),
     [Value|expression(Exprs, State)];
@@ -158,7 +134,7 @@ expression(V, State) when is_integer(V) ->
     {V, State};
 %% Do not evaluate variables any further; it's up to the pretty printer
 %% to do that.
-expression({var, Line, Variable}, #state{variables=_Variables0}=State0) ->
+expression({var, Line, Variable}, State0) ->
     {{var, Line, Variable}, State0};
 expression({iota, V}, State) ->
     {lists:seq(1, V), State};
