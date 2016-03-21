@@ -45,7 +45,6 @@ eval(Program) ->
 
     %% Generate an actor identifier for execution of this application.
     Actor = term_to_binary(node()),
-    lager:info("Generated actor identifier for program: ~p", [Actor]),
 
     %% Finally, evaluate the program.
     eval(ParseTree, #state{actor=Actor, variables=dict:new()}).
@@ -75,10 +74,6 @@ statement({update, {var, _, Variable}, Expression}, #state{actor=Actor}=State0) 
         %% We got back the identifier of a variable that contains the
         %% state that we want.
         {{var, _, TheirId}, #state{variables=Variables0}=State1} ->
-            lager:info("Original identifier: ~p value: ~p",
-                       [Variable, lasp_type:query(?SET, Variable)]),
-            lager:info("Received identifier: ~p value: ~p",
-                       [TheirId, lasp_type:query(?SET, TheirId)]),
 
             %% Bind our new variable directly to the shadow variable.
             ok = lasp:bind_to(Variable, TheirId),
@@ -137,11 +132,9 @@ expression({process,
     %% operation; this will get an anonymous global variable.
     %%
     {ok, {Destination, _, _, _}} = lasp:declare(?SET),
-    lager:info("Created shadow variable: ~p", [Destination]),
 
     %% Execute the map operation.
     ok = lasp:map(Source, Function, Destination),
-    lager:info("Current value of source: ~p", [lasp_type:query(?SET, Source)]),
 
     %% If we perform an operation on a variable, such as a map,
     %% we know the value is going to change.  Therefore, modify
@@ -175,8 +168,10 @@ expression(Expr, _State) ->
 
 %% @private
 pp({var, _, Variable}) ->
-    Value = lasp_type:query(?SET, Variable),
-    lager:info("Received value: ~p", [Value]),
+    %% @todo: Block for at least the initial transition off of the
+    %% bottom value; not sure how to handle this in practice.
+    {ok, {_, _, _, Value0}} = lasp:read(Variable, {strict, undefined}),
+    Value = lasp_type:value(?SET, Value0),
     pp(Value);
 pp(List) when is_list(List) ->
     list_to_binary("{ " ++
