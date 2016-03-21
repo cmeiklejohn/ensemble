@@ -7,6 +7,17 @@ system for CRDTs.
 
 <img src="https://travis-ci.org/cmeiklejohn/ensemble.svg" />
 
+## Running a repl.
+
+You can start a Read-Eval-Print-Loop fairly easily.
+
+```
+$ make shell
+[Erlang startup messages]
+1> ensemble_repl:start()
+Ensemble-(1)>
+```
+
 ## Operations
 
 Assign a set of values to a variable.
