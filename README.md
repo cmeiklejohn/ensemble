@@ -62,6 +62,7 @@ A <- i10; A
 * REPL
 * More!
 * How to express operations like map by themselves.
+* Is assignment really just an expression, or is it a statement?
 
 ## Copyright
 
