@@ -7,12 +7,14 @@ Terminals
 Rootsymbol
 statements.
 
-%% Expect 1 shift/reduce conflict from the integer list creation.
-Expect 1.
+%% Expect 1 shift/reduce conflict from the integer list creation and
+%% newline handling.
+Expect 3.
 
 statements -> statement : ['$1'].
 statements -> statements nl statements : '$1' ++ '$3'.
 statements -> statements nl : '$1'.
+statements -> nl.
 
 %% Statements can be of three types: expressions, assignment statements
 %% that take expressions, and variables, which are the primary value

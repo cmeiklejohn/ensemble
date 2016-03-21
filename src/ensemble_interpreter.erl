@@ -49,6 +49,10 @@ eval(Program) ->
     eval(ParseTree, #state{actor=Actor}).
 
 %% @private
+eval('$undefined', _State) ->
+    %% If the parse tree produced nothing, evaluation returns the empty
+    %% set, I think?
+    pp([]);
 eval([Stmt|[]], State0) ->
     %% Final call, so ignore returned state.
     {Result, _State} = statement(Stmt, State0),

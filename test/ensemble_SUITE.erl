@@ -61,7 +61,8 @@ all() ->
      map_times_test,
      map_without_assignment_test,
      product_without_assignment_test,
-     assignment_test
+     assignment_test,
+     empty_test
     ].
 
 %% ===================================================================
@@ -106,4 +107,10 @@ product_without_assignment_test(_Config) ->
 assignment_test(_Config) ->
     Program = io_lib:format("A <- 1 2 3 4", []),
     <<"{ 1 2 3 4 }">> = ?INTERPRETER:eval(Program),
+    ok.
+
+%% @doc Verify the empty behaviour.
+empty_test(_Config) ->
+    Program = io_lib:format("\n", []),
+    <<"{ }">> = ?INTERPRETER:eval(Program),
     ok.
