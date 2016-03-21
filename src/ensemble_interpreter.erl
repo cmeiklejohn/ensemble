@@ -61,29 +61,65 @@ eval([Stmt|Stmts], State0) ->
     eval(Stmts, State).
 
 %% @private
-statement({update, {var, _, Variable}, Expression},
-          #state{actor=Actor, variables=Variables0}=State0) ->
+%%
+%% Update is an assignment statement, where the expression on the rhs is
+%% evaluated and assigned to the variable on the lhs; the variable on
+%% the lhs may not exist, so the variable needs to first be delcared.
+%%
+statement({update, {var, _, Variable}, Expression}, #state{actor=Actor}=State0) ->
     %% Create a new variable.
     {ok, _} = lasp:declare(Variable, ?SET),
 
     %% Evaluate the expression.
     case expression(Expression, State0) of
-        %% If the result of the expression needs to spawn a function to
-        %% bind a value to our variable, such as for a map and fold;
-        %% then return a closure that can be called immediately with the
-        %% variable to bind to.
-        {Function, State1} when is_function(Function) ->
-            Function(Variable, State1);
-        %% Else, if we get a value back, we can directly bind.
-        {Value, State1} ->
+        %% We got back the identifier of a variable that contains the
+        %% state that we want.
+        {{var, TheirId}, #state{variables=Variables0}=State1} ->
+            lager:info("Original identifier: ~p value: ~p",
+                       [Variable, lasp_type:query(?SET, Variable)]),
+            lager:info("Received identifier: ~p value: ~p",
+                       [TheirId, lasp_type:query(?SET, TheirId)]),
+
+            %% Bind our new variable directly to the shadow variable.
+            ok = lasp:bind_to(Variable, TheirId),
+
+            %% Wait for new variable to change from bottom state and
+            %% return the result.
+            {ok, {_, _, _, V1}} = lasp:read(Variable, {strict, undefined}),
+            Value = lasp_type:value(?SET, V1),
+            Variables = dict:store(Variable, V1, Variables0),
+
+            %% Return value and updated cache.
+            {Value, State1#state{variables=Variables}};
+
+        %% Else, we got back an literal value that we can directly bind
+        %% to the variable.
+        {Literal, #state{variables=Variables0}=State1} ->
             {ok, {_, _, _, V}} = lasp:update(Variable,
-                                            {add_all, Value},
+                                            {add_all, Literal},
                                             Actor),
+
+            %% Return current non-CRDT value to the user.
             V1 = lasp_type:value(?SET, V),
+
+            %% Cache last observed value.
             Variables = dict:store(Variable, V, Variables0),
             {V1, State1#state{variables=Variables}}
+
     end;
-statement({query, {var, _, Variable}}, #state{variables=Variables0}=State) ->
+%% Otherwise, the statement must be an expression that evaluates to a
+%% value that will be returned to the user.  Attempt to evaluate this
+%% expression.
+statement(Stmt, State) ->
+    expression(Stmt, State).
+
+%% @private
+%%
+%% If a variable sits alone by itself, we want to query the variable for
+%% the latest value while ensuring this value is not earlier than some
+%% previously observed value: ie. preserving causality.
+%%
+expression({query, {var, _, Variable}}, #state{variables=Variables0}=State) ->
     Previous = case dict:find(Variable, Variables0) of
         {ok, V} ->
             V;
@@ -91,54 +127,72 @@ statement({query, {var, _, Variable}}, #state{variables=Variables0}=State) ->
             undefined
     end,
     {ok, {_, _, _, Value}} = lasp:read(Variable, Previous),
+    %% @todo: Write back newest value?
     {lasp_type:value(?SET, Value), State};
-statement(Stmt, State) ->
-    {Stmt, State}.
 
-%% @private
-expression({map, {var, _, Var}, {function, {Function0, _}}, Val}, State0) ->
-    Fun = fun(Variable, #state{variables=Variables0}=State) ->
+%% When a process call is received, create a shadow variable to store
+%% the results of the map operation and return the identifier to the
+%% caller of map: it's their decision whether to query and return the
+%% result to the user, or assign the variable to another variable in the
+%% system.
+%%
+expression({process,
+            {map, {var, _, Source}, {function, {Function0, _}}, Val}},
+           #state{variables=Variables0}=State0) ->
 
-            %% Generate an Erlang anonymous function.
-            Function = case Function0 of
-                '+' ->
-                    fun(X) -> X + Val end;
-                '*' ->
-                    fun(X) -> X * Val end
-            end,
-
-            %% Produce a closure that will be executed for the map
-            %% operation.
-            ok = lasp:map(Var, Function, Variable),
-
-            %% If we perform an operation on a variable, such as a map,
-            %% we know the value is going to change.  Therefore, modify
-            %% our cache of known values to show that the next read
-            %% operation should be strict, to guarantee
-            %% read-your-own-writes.
-            Previous = case dict:find(Variable, Variables0) of
-                {ok, V} ->
-                    V;
-                _ ->
-                    undefined
-            end,
-            Variables = dict:store(Variable, {strict, Previous}, Variables0),
-            {Previous, State#state{variables=Variables}}
-
+    %% Generate an Erlang anonymous function.
+    Function = case Function0 of
+        '+' ->
+            fun(X) -> X + Val end;
+        '*' ->
+            fun(X) -> X * Val end
     end,
-    {Fun, State0};
+
+    %% Create a shadow variable used to store the result of the fold
+    %% operation; this will get an anonymous global variable.
+    %%
+    {ok, {Destination, _, _, _}} = lasp:declare(?SET),
+    lager:info("Created shadow variable: ~p", [Destination]),
+
+    %% Execute the map operation.
+    ok = lasp:map(Source, Function, Destination),
+    lager:info("Current value of source: ~p", [lasp_type:query(?SET, Source)]),
+
+    %% If we perform an operation on a variable, such as a map,
+    %% we know the value is going to change.  Therefore, modify
+    %% our cache of known values to show that the next read
+    %% operation should be strict, to guarantee
+    %% read-your-own-writes.
+    Previous = case dict:find(Destination, Variables0) of
+        {ok, V} ->
+            V;
+        _ ->
+            undefined
+    end,
+    Variables = dict:store(Destination, {strict, Previous}, Variables0),
+
+    %% Return variable.
+    {{var, Destination}, State0#state{variables=Variables}};
 expression([Expr|Exprs], State0) ->
     {Value, State} = expression(Expr, State0),
     [Value|expression(Exprs, State)];
 expression(V, State) when is_integer(V) ->
     {V, State};
+expression({var, Variable}, #state{variables=_Variables0}=State0) ->
+    %% @todo: Cache here?
+    Value = lasp_type:query(?SET, Variable),
+    {Value, State0};
 expression({iota, V}, State) ->
     {lists:seq(1, V), State};
-expression(Expr, State) ->
+expression(Expr, _State) ->
     lager:info("Expression not caught: ~p", [Expr]),
-    {Expr, State}.
+    exit(badarg).
 
 %% @private
+pp({var, Variable}) ->
+    Value = lasp_type:query(?SET, Variable),
+    lager:info("Received value: ~p", [Value]),
+    pp(Value);
 pp(List) when is_list(List) ->
     list_to_binary("{ " ++
                    [io_lib:format("~p ", [Item]) || Item <- List] ++

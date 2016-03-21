@@ -18,8 +18,8 @@ statement -> var '<-' expression : {update, '$1', '$3'}.
 statement -> expression : '$1'.
 
 expression -> 'i' integer : {iota, unwrap('$2')}.
-expression -> var function expression : {map, '$1', '$2', '$3'}.
-expression -> function '/' expression : {foldr, '$1', '$3'}.
+expression -> var function expression : {process, {map, '$1', '$2', '$3'}}.
+expression -> function '/' expression : {process, {foldr, '$1', '$3'}}.
 expression -> var : {query, '$1'}.
 expression -> int_list : '$1'.
 expression -> integer : unwrap('$1').

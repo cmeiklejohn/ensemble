@@ -62,6 +62,9 @@ A <- i10; A
 * REPL
 * More!
 * How to express operations like map by themselves.
+* Is assignment really just an expression, or is it a statement?
+* Interpreter should operate only with identifiers; move all value operation to the pretty printer.
+* Change {var, _, _} to {var, _}
 
 ## Copyright
 
