@@ -115,21 +115,6 @@ statement(Stmt, State) ->
 
 %% @private
 %%
-%% If a variable sits alone by itself, we want to query the variable for
-%% the latest value while ensuring this value is not earlier than some
-%% previously observed value: ie. preserving causality.
-%%
-expression({query, {var, _, Variable}}, #state{variables=Variables0}=State) ->
-    Previous = case dict:find(Variable, Variables0) of
-        {ok, V} ->
-            V;
-        _ ->
-            undefined
-    end,
-    {ok, {_, _, _, Value}} = lasp:read(Variable, Previous),
-    %% @todo: Write back newest value?
-    {lasp_type:value(?SET, Value), State};
-
 %% When a process call is received, create a shadow variable to store
 %% the results of the map operation and return the identifier to the
 %% caller of map: it's their decision whether to query and return the
