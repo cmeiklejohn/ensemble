@@ -74,7 +74,7 @@ statement({update, {var, _, Variable}, Expression}, #state{actor=Actor}=State0) 
     case expression(Expression, State0) of
         %% We got back the identifier of a variable that contains the
         %% state that we want.
-        {{var, TheirId}, #state{variables=Variables0}=State1} ->
+        {{var, _, TheirId}, #state{variables=Variables0}=State1} ->
             lager:info("Original identifier: ~p value: ~p",
                        [Variable, lasp_type:query(?SET, Variable)]),
             lager:info("Received identifier: ~p value: ~p",
@@ -137,7 +137,7 @@ expression({query, {var, _, Variable}}, #state{variables=Variables0}=State) ->
 %% system.
 %%
 expression({process,
-            {map, {var, _, Source}, {function, {Function0, _}}, Val}},
+            {map, {var, Line, Source}, {function, {Function0, _}}, Val}},
            #state{variables=Variables0}=State0) ->
 
     %% Generate an Erlang anonymous function.
@@ -172,16 +172,16 @@ expression({process,
     Variables = dict:store(Destination, {strict, Previous}, Variables0),
 
     %% Return variable.
-    {{var, Destination}, State0#state{variables=Variables}};
+    {{var, Line, Destination}, State0#state{variables=Variables}};
 expression([Expr|Exprs], State0) ->
     {Value, State} = expression(Expr, State0),
     [Value|expression(Exprs, State)];
 expression(V, State) when is_integer(V) ->
     {V, State};
-expression({var, Variable}, #state{variables=_Variables0}=State0) ->
-    %% @todo: Cache here?
-    Value = lasp_type:query(?SET, Variable),
-    {Value, State0};
+%% Do not evaluate variables any further; it's up to the pretty printer
+%% to do that.
+expression({var, Line, Variable}, #state{variables=_Variables0}=State0) ->
+    {{var, Line, Variable}, State0};
 expression({iota, V}, State) ->
     {lists:seq(1, V), State};
 expression(Expr, _State) ->
@@ -189,7 +189,7 @@ expression(Expr, _State) ->
     exit(badarg).
 
 %% @private
-pp({var, Variable}) ->
+pp({var, _, Variable}) ->
     Value = lasp_type:query(?SET, Variable),
     lager:info("Received value: ~p", [Value]),
     pp(Value);
