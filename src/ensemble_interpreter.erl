@@ -166,9 +166,14 @@ expression(Expr, _State) ->
 %% @private
 %% @todo: Block for at least the initial transition off of the bottom.
 pp({var, _, Variable}) ->
-    {ok, {_, _, _, Value0}} = lasp:read(Variable, {strict, undefined}),
-    Value = lasp_type:value(?SET, Value0),
-    pp(Value);
+    case lasp:read(Variable, {strict, undefined}) of
+        {ok, {_, _, _, Value0}} ->
+            Value = lasp_type:value(?SET, Value0),
+            pp(Value);
+        {error, not_found} ->
+            io:format("Variable ~p is not in scope.~n", [Variable]),
+            exit(badarg)
+    end;
 pp(List) when is_list(List) ->
     list_to_binary("{ " ++ [pp(Item) || Item <- List] ++ "}");
 pp({A, B}) ->

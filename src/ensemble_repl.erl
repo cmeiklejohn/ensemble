@@ -54,7 +54,11 @@ loop(#state{counter=Counter}=State) ->
         io:format("~s~n", [binary_to_list(Result)])
     catch
         _:Error ->
-            io:format("Error: ~p~n", [Error])
+            io:format("~n", []),
+            io:format("Error: ~p~n", [Error]),
+            io:format("~n", []),
+            io:format("Backtrace:~n~p~n", [erlang:get_stacktrace()]),
+            io:format("~n", [])
     end,
 
     loop(State#state{counter=Counter+1}).

@@ -81,14 +81,10 @@ Maybe try computing the Cartesian product.
 
 ## Coming Soon
 
-* Foldr
-* Union
-* Intersection
-* Compliment
-* REPL
-* More!
-* How to express operations like map by themselves.
-* Is assignment really just an expression, or is it a statement?
+* foldr
+* union
+* intersection
+* compliment
 
 ## Copyright
 
