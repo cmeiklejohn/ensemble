@@ -61,6 +61,13 @@ Semi-colons can also be used to seperate statements on the same line.
 {1 2 3 4 5 6 7 8 9 10}
 ```
 
+Maybe try computing the Cartesian product.
+
+```
+> A <- i2; B <- i2; A*B
+{ (1, 1) (1, 2) (2, 1) (2, 2) }
+```
+
 ## Coming Soon
 
 * Foldr
