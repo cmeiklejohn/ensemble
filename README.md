@@ -82,15 +82,15 @@ Maybe try computing the Cartesian product.
 Then, try the intersection.
 
 ```
-> A <- i2; B <- i2; A & B
+> A <- i2; B <- i10; A & B
 { 1 2 }
 ```
 
 Or, try the union.
 
 ```
-> A <- i2; B <- i2; A | B
-{ 1 2 }
+> A <- i2; B <- i5; A | B
+{ 1 2 3 4 5 }
 ```
 
 ## Coming Soon
