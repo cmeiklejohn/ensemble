@@ -11,6 +11,7 @@ Rules.
 
 <-                     : {token,{list_to_atom(TokenChars),TokenLine}}.
 \+                     : {token,{list_to_atom(TokenChars),TokenLine}}.
+x                      : {token,{list_to_atom(TokenChars),TokenLine}}.
 \*                     : {token,{list_to_atom(TokenChars),TokenLine}}.
 \&                     : {token,{list_to_atom(TokenChars),TokenLine}}.
 i                      : {token,{list_to_atom(TokenChars),TokenLine}}.

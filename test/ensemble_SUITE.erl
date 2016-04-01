@@ -63,7 +63,7 @@ all() ->
      product_without_assignment_test,
      intersection_without_assignment_test,
      union_without_assignment_test,
-     fold_without_assignment_test,
+     fold_plus_without_assignment_test,
      assignment_test,
      empty_test
     ].
@@ -84,25 +84,25 @@ iota_test(_Config) ->
 
 %% @doc Verify the map behaviour.
 map_plus_test(_Config) ->
-    Program = io_lib:format("A <- i10; B <- A+1; B", []),
+    Program = io_lib:format("A <- i10; B <- A + 1; B", []),
     <<"{ 2 3 4 5 6 7 8 9 10 11 }">> = ?INTERPRETER:eval(Program),
     ok.
 
 %% @doc Verify the map behaviour.
 map_times_test(_Config) ->
-    Program2 = io_lib:format("A <- i5; B <- A*2; B", []),
+    Program2 = io_lib:format("A <- i5; B <- A * 2; B", []),
     <<"{ 2 4 6 8 10 }">> = ?INTERPRETER:eval(Program2),
     ok.
 
 %% @doc Verify the map behaviour.
 map_without_assignment_test(_Config) ->
-    Program2 = io_lib:format("A <- i5; A*2", []),
+    Program2 = io_lib:format("A <- i5; A * 2", []),
     <<"{ 2 4 6 8 10 }">> = ?INTERPRETER:eval(Program2),
     ok.
 
 %% @doc Verify the product behaviour.
 product_without_assignment_test(_Config) ->
-    Program2 = io_lib:format("A <- i2; B <- i2; A*B", []),
+    Program2 = io_lib:format("A <- i2; B <- i2; A x B", []),
     <<"{ (1, 1) (1, 2) (2, 1) (2, 2) }">> = ?INTERPRETER:eval(Program2),
     ok.
 
@@ -119,7 +119,7 @@ union_without_assignment_test(_Config) ->
     ok.
 
 %% @doc Verify the fold behaviour.
-fold_without_assignment_test(_Config) ->
+fold_plus_without_assignment_test(_Config) ->
     Program2 = io_lib:format("A <- i5; +/A", []),
     <<"15">> = ?INTERPRETER:eval(Program2),
     ok.
@@ -135,3 +135,6 @@ empty_test(_Config) ->
     Program = io_lib:format("\n", []),
     <<"{ }">> = ?INTERPRETER:eval(Program),
     ok.
+
+%% @todo Product, fold, intersection, and union all need to support
+%%       literals.

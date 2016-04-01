@@ -3,7 +3,7 @@ statements statement expression int_list function product union
 intersection fold.
 
 Terminals
-'/' '&' '|' '<-' '+' '*' 'i' var integer nl.
+'x' '/' '&' '|' '<-' '+' '*' 'i' var integer nl.
 
 Rootsymbol
 statements.
@@ -57,10 +57,10 @@ int_list -> integer int_list : [unwrap('$1')] ++ '$2'.
 
 %% Function types.
 function -> '+' : {function, '$1'}.
-function -> product : {function, '$1'}.
+function -> '*' : {function, '$1'}.
 
 %% Product.
-product -> '*' : '$1'.
+product -> 'x' : '$1'.
 
 %% Union.
 union -> '|' : '$1'.
