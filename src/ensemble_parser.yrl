@@ -57,6 +57,7 @@ int_list -> integer int_list : [unwrap('$1')] ++ '$2'.
 
 %% Function types.
 function -> '+' : {function, '$1'}.
+function -> product : {function, '$1'}.
 
 %% Product.
 product -> '*' : '$1'.
