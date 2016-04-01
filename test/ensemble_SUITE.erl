@@ -108,14 +108,12 @@ product_without_assignment_test(_Config) ->
 %% @doc Verify the intersection behaviour.
 intersection_without_assignment_test(_Config) ->
     Program2 = io_lib:format("A <- i2; B <- i2; A & B", []),
-    ct:pal("Program2: ~p", [Program2]),
     <<"{ 1 2 }">> = ?INTERPRETER:eval(Program2),
     ok.
 
 %% @doc Verify the union behaviour.
 union_without_assignment_test(_Config) ->
     Program2 = io_lib:format("A <- i2; B <- i2; A | B", []),
-    ct:pal("Program2: ~p", [Program2]),
     <<"{ 1 2 }">> = ?INTERPRETER:eval(Program2),
     ok.
 
