@@ -133,6 +133,34 @@ expression({process,
     %% Return variable.
     {{var, Line, Destination}, State0};
 expression({process,
+            {union, {var, Line, Left}, {var, Line, Right}}},
+           State0) ->
+
+    %% Create a shadow variable used to store the result of the
+    %% operation; this will get an anonymous global variable.
+    %%
+    {ok, {Union, _, _, _}} = lasp:declare(?SET),
+
+    %% Execute the operation.
+    ok = lasp:union(Left, Right, Union),
+
+    %% Return variable.
+    {{var, Line, Union}, State0};
+expression({process,
+            {intersection, {var, Line, Left}, {var, Line, Right}}},
+           State0) ->
+
+    %% Create a shadow variable used to store the result of the
+    %% operation; this will get an anonymous global variable.
+    %%
+    {ok, {Intersection, _, _, _}} = lasp:declare(?SET),
+
+    %% Execute the operation.
+    ok = lasp:intersection(Left, Right, Intersection),
+
+    %% Return variable.
+    {{var, Line, Intersection}, State0};
+expression({process,
             {product, {var, Line, Left}, {var, Line, Right}}},
            State0) ->
 

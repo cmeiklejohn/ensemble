@@ -1,8 +1,9 @@
 Nonterminals
-statements statement expression int_list function product.
+statements statement expression int_list function product union
+intersection.
 
 Terminals
-'<-' '+' '*' 'i' var integer nl.
+'&' '|' '<-' '+' '*' 'i' var integer nl.
 
 Rootsymbol
 statements.
@@ -38,6 +39,12 @@ expression -> var function expression : {process, {map, '$1', '$2', '$3'}}.
 %% Cartesian product, computes the cross product between two variables.
 expression -> var product var : {process, {product, '$1', '$3'}}.
 
+%% Union.
+expression -> var union var : {process, {union, '$1', '$3'}}.
+
+%% Intersection.
+expression -> var intersection var : {process, {intersection, '$1', '$3'}}.
+
 %% Lists of integers, the other primary value type.
 expression -> int_list : '$1'.
 expression -> integer : unwrap('$1').
@@ -49,7 +56,14 @@ int_list -> integer int_list : [unwrap('$1')] ++ '$2'.
 function -> '+' : {function, '$1'}.
 function -> product : {function, '$1'}.
 
+%% Product.
 product -> '*' : '$1'.
+
+%% Union.
+union -> '|' : '$1'.
+
+%% Intersection.
+intersection -> '&' : '$1'.
 
 Erlang code.
 

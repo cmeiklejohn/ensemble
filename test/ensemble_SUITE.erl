@@ -61,6 +61,8 @@ all() ->
      map_times_test,
      map_without_assignment_test,
      product_without_assignment_test,
+     intersection_without_assignment_test,
+     union_without_assignment_test,
      assignment_test,
      empty_test
     ].
@@ -101,6 +103,20 @@ map_without_assignment_test(_Config) ->
 product_without_assignment_test(_Config) ->
     Program2 = io_lib:format("A <- i2; B <- i2; A*B", []),
     <<"{ (1, 1) (1, 2) (2, 1) (2, 2) }">> = ?INTERPRETER:eval(Program2),
+    ok.
+
+%% @doc Verify the intersection behaviour.
+intersection_without_assignment_test(_Config) ->
+    Program2 = io_lib:format("A <- i2; B <- i2; A & B", []),
+    ct:pal("Program2: ~p", [Program2]),
+    <<"{ 1 2 }">> = ?INTERPRETER:eval(Program2),
+    ok.
+
+%% @doc Verify the union behaviour.
+union_without_assignment_test(_Config) ->
+    Program2 = io_lib:format("A <- i2; B <- i2; A | B", []),
+    ct:pal("Program2: ~p", [Program2]),
+    <<"{ 1 2 }">> = ?INTERPRETER:eval(Program2),
     ok.
 
 %% @doc Verify the assignment behaviour.
