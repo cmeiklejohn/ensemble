@@ -79,11 +79,23 @@ Maybe try computing the Cartesian product.
 { (1, 1) (1, 2) (2, 1) (2, 2) }
 ```
 
+Then, try the intersection.
+
+```
+> A <- i2; B <- i2; A & B
+{ 1 2 }
+```
+
+Or, try the union.
+
+```
+> A <- i2; B <- i2; A | B
+{ 1 2 }
+```
+
 ## Coming Soon
 
 * foldr
-* union
-* intersection
 * compliment
 
 ## Copyright
