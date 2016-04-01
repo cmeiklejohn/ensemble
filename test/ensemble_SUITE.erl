@@ -63,6 +63,7 @@ all() ->
      product_without_assignment_test,
      intersection_without_assignment_test,
      union_without_assignment_test,
+     fold_without_assignment_test,
      assignment_test,
      empty_test
     ].
@@ -115,6 +116,12 @@ intersection_without_assignment_test(_Config) ->
 union_without_assignment_test(_Config) ->
     Program2 = io_lib:format("A <- i2; B <- i2; A | B", []),
     <<"{ 1 2 }">> = ?INTERPRETER:eval(Program2),
+    ok.
+
+%% @doc Verify the fold behaviour.
+fold_without_assignment_test(_Config) ->
+    Program2 = io_lib:format("A <- i5; +/A", []),
+    <<"15">> = ?INTERPRETER:eval(Program2),
     ok.
 
 %% @doc Verify the assignment behaviour.

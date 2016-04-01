@@ -3,3 +3,4 @@
 -define(INTERPRETER, ensemble_interpreter).
 
 -define(SET, lasp_orset).
+-define(COUNTER, lasp_pncounter).

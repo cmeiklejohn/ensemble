@@ -93,9 +93,15 @@ Or, try the union.
 { 1 2 3 4 5 }
 ```
 
+How about a fold?
+
+```
+> A <- i5; +/A
+15
+```
+
 ## Coming Soon
 
-* foldr
 * compliment
 
 ## Copyright

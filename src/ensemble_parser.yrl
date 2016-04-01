@@ -1,9 +1,9 @@
 Nonterminals
 statements statement expression int_list function product union
-intersection.
+intersection fold.
 
 Terminals
-'&' '|' '<-' '+' '*' 'i' var integer nl.
+'/' '&' '|' '<-' '+' '*' 'i' var integer nl.
 
 Rootsymbol
 statements.
@@ -39,6 +39,9 @@ expression -> var function expression : {process, {map, '$1', '$2', '$3'}}.
 %% Cartesian product, computes the cross product between two variables.
 expression -> var product var : {process, {product, '$1', '$3'}}.
 
+%% Fold operation.
+expression -> function fold var : {process, {fold, '$1', '$3'}}.
+
 %% Union.
 expression -> var union var : {process, {union, '$1', '$3'}}.
 
@@ -64,6 +67,9 @@ union -> '|' : '$1'.
 
 %% Intersection.
 intersection -> '&' : '$1'.
+
+%% Fold.
+fold -> '/' : '$1'.
 
 Erlang code.
 

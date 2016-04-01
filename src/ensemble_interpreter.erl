@@ -161,6 +161,23 @@ expression({process,
     %% Return variable.
     {{var, Line, Intersection}, State0};
 expression({process,
+            {fold, {function, {Function0, Line}}, {var, Line, Source}}},
+           State0) ->
+
+    %% Preprocess the function.
+    {ok, Type, Function} = function(Function0),
+
+    %% Create a shadow variable used to store the result of the fold
+    %% operation; this will get an anonymous global variable.
+    %%
+    {ok, {Fold, _, _, _}} = lasp:declare(Type),
+
+    %% Execute the operation.
+    ok = lasp:fold(Source, Function, Fold),
+
+    %% Return variable.
+    {{var, Line, Type, Fold}, State0};
+expression({process,
             {product, {var, Line, Left}, {var, Line, Right}}},
            State0) ->
 
@@ -192,19 +209,32 @@ expression(Expr, _State) ->
     exit(badarg).
 
 %% @private
-%% @todo: Block for at least the initial transition off of the bottom.
-pp({var, _, Variable}) ->
+pp({var, Line, Variable}) ->
+    pp({var, Line, ?SET, Variable});
+pp({var, _, Type, Variable}) ->
     case lasp:read(Variable, {strict, undefined}) of
         {ok, {_, _, _, Value0}} ->
-            Value = lasp_type:value(?SET, Value0),
+            Value = lasp_type:value(Type, Value0),
             pp(Value);
         {error, not_found} ->
             io:format("Variable ~p is not in scope.~n", [Variable]),
             exit(badarg)
     end;
 pp(List) when is_list(List) ->
-    list_to_binary("{ " ++ [pp(Item) || Item <- List] ++ "}");
-pp({A, B}) ->
+    list_to_binary("{ " ++ [pp({element, Item}) || Item <- List] ++ "}");
+pp({element, {A, B}}) ->
     io_lib:format("(~p, ~p) ", [A, B]);
-pp(X) ->
-    io_lib:format("~p ", [X]).
+pp({element, X}) ->
+    io_lib:format("~p ", [X]);
+pp(Value) ->
+    list_to_binary(integer_to_list(Value)).
+
+%% @private
+function('+') ->
+    %% Use a PN-Counter for the destination data type.
+    Type = ?COUNTER,
+
+    %% Convert the function to a proper functor from set to counter.
+    Function = fun(X, _Acc) -> [{increment, X}] end,
+
+    {ok, Type, Function}.
